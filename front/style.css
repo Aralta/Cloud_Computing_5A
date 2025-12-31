@@ -1,0 +1,234 @@
+/* Base */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: #f6f7fb;
+  color: #111;
+}
+
+#app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.muted {
+  color: #555;
+}
+
+.small {
+  font-size: 0.9rem;
+}
+
+/* Topbar */
+#topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  margin-bottom: 16px;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Panels / Forms */
+.panel {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+.form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.form input,
+.form textarea,
+.form select,
+.form button {
+  font: inherit;
+}
+
+.form input,
+.form textarea,
+.form select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #cfcfcf;
+  border-radius: 8px;
+  background: #fff;
+  font-weight: 400;
+}
+
+.form textarea {
+  resize: vertical;
+}
+
+.form button {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #cfcfcf;
+  background: #fff;
+  cursor: pointer;
+}
+
+.form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #b00020;
+  background: #ffe9ee;
+  border: 1px solid #ffc2cf;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+/* Calendar container */
+#calendarView {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+/* Two columns helper */
+.two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 700px) {
+  .two-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Modal */
+body.modal-open {
+  overflow: hidden;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+}
+
+.modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.modal__content {
+  position: relative;
+  width: min(720px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #ddd;
+}
+
+.modal__content h2 {
+  margin: 0 0 12px 0;
+}
+
+.modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.btn-secondary {
+  background: #fff;
+}
+
+.btn-danger {
+  background: #fff;
+  border-color: #ffb3bf;
+  color: #b00020;
+}
+
+/* small link-style button */
+.link-btn {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #0b57d0;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-left: 8px;
+}
+
+
+/*Checkbox des users dans Modal*/
+.users-checkbox-list {
+  border: 1px solid #cfcfcf;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px;
+  max-height: 240px;
+  overflow: auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.users-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.users-checkbox-row:hover {
+  background: #f6f7fb;
+}
+
+.users-checkbox-row input[type="checkbox"] {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+
+.users-checkbox-row span {
+  flex: 1;
+  line-height: 1.2;
+}

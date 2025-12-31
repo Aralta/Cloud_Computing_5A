@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<!-- npm install --save @fullcalendar/core @fullcalendar/daygrid @fullcalendar/interaction @fullcalendar/timegrid --legacy-peer-deps ! -->
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Calendar</title>
+
+    <link rel="stylesheet" href="./style.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
+    <script type="module" src="./main.js"></script>
+  </head>
+
+  <body>
+    <div id="app">
+      <header id="topbar" class="hidden">
+        <div id="userInfo" class="muted"></div>
+
+        <div class="topbar-actions">
+          <button id="refreshBtn" type="button">Rafraîchir</button>
+          <button id="logoutBtn" type="button">Se déconnecter</button>
+        </div>
+      </header>
+
+      <section id="loginView" class="panel">
+        <h1>Connexion</h1>
+
+        <form id="loginForm" class="form">
+          <label>
+            Email
+            <input id="loginEmail" type="email" autocomplete="email" required />
+          </label>
+
+          <label>
+            Mot de passe
+            <input id="loginPassword" type="password" autocomplete="current-password" required />
+          </label>
+
+          <button type="submit">Se connecter</button>
+
+          <div id="loginError" class="error hidden" role="alert"></div>
+        </form>
+      </section>
+
+      <section id="calendarView" class="hidden">
+        <div id="calendar"></div>
+      </section>
+    </div>
+
+    <!-- MODAL EVENT -->
+    <div id="eventModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle">
+      <div class="modal__backdrop" data-close="1"></div>
+
+      <div class="modal__content" role="document">
+        <h2 id="eventModalTitle">Événement</h2>
+
+        <form id="eventForm" class="form">
+          <label>
+            Titre
+            <input id="eventTitle" type="text" required />
+          </label>
+
+          <label>
+            Description
+            <textarea id="eventDescription" rows="4"></textarea>
+          </label>
+
+          <div class="two-cols">
+            <label>
+              Début
+              <input id="eventStart" type="datetime-local" required />
+            </label>
+
+            <label>
+              Fin
+              <input id="eventEnd" type="datetime-local" required />
+            </label>
+          </div>
+
+          <div id="usersLoadingHint" class="muted small hidden">
+            Chargement des utilisateurs…
+            <button id="retryUsersBtn" type="button" class="link-btn">Réessayer</button>
+          </div>
+
+          <div class="two-cols">
+            <label>
+              Viewers
+              <select id="eventViewers" multiple size="6"></select>
+            </label>
+
+            <label>
+              Editors
+              <select id="eventEditors" multiple size="6"></select>
+            </label>
+          </div>
+
+          <div class="modal__actions">
+            <button id="modalCancelBtn" type="button" class="btn-secondary">Annuler</button>
+
+            <button id="modalDeleteBtn" type="button" class="btn-danger hidden">Supprimer</button>
+
+            <button id="modalSubmitBtn" type="submit">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
