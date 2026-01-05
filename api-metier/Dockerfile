@@ -1,4 +1,3 @@
-# Dockerfile pour l'API Métier (Calendrier/Events)
 FROM python:3.11-slim
 
 LABEL maintainer="Cloud Computing 5A"
@@ -11,24 +10,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copier et installer les dépendances Python
+# Copie et installation des dépendances Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier le code source
+# Copie du code source
 COPY . .
 
-# Exposer le port
-EXPOSE 3001
-
-# Variables d'environnement
-ENV PYTHONUNBUFFERED=1
+# Variables d'environnement par défaut
+ENV HOST=0.0.0.0
 ENV PORT=3001
-ENV DATABASE_URL=postgresql://user:password@db:5432/calendar_db
+ENV DEBUG=0
+ENV PYTHONUNBUFFERED=1
+
+# Exposition du port
+EXPOSE 3001
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:3001/health')" || exit 1
 
-# Lancer l'application
-CMD ["python", "app.py"]
+# Commande de démarrage
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "3001"]
