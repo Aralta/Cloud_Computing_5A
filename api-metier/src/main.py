@@ -1,60 +1,77 @@
-"""
-Application FastAPI principale - Point d'entrée de l'API Métier
-"""
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException
+from uuid import UUID
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
+from schemas import EventCreate, EventUpdate
+from security import get_current_user
+from rights import can_view, can_edit, can_delete
+import fake_db
 
-from .config import settings
-from .database import engine
-from . import models
-from .routers import events
 
-# Création des tables en base de données
-models.Base.metadata.create_all(bind=engine)
+app = FastAPI(title="Agenda Microservice")
 
-# Initialisation de l'application FastAPI
-app = FastAPI(
-    title=settings.APP_NAME,
-    description="API de gestion des événements du calendrier",
-    version=settings.APP_VERSION,
-    docs_url="/docs",
-    redoc_url="/redoc"
-)
+origins = [
+    "http://127.0.0.1:5500",  # ton front local
+    "http://localhost:5500",   # alternative
+    "*",  # pour tester facilement, autorise toutes les origines (pas recommandé en prod)
+]
 
-# Configuration CORS pour autoriser les requêtes cross-origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En production, spécifier les domaines autorisés
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=origins,        # quelles origines sont autorisées
+    allow_credentials=True,       # permet l'envoi des cookies / headers d'auth
+    allow_methods=["*"],          # autorise GET, POST, PATCH, DELETE...
+    allow_headers=["*"],          # autorise tous les headers
 )
 
-# Inclusion des routers
-app.include_router(events.router)
+
+@app.get("/events")
+def get_events(
+    user_id: UUID = Depends(get_current_user)
+):
+    events = fake_db.get_all_events()
+
+    visible_events = [event for event in events if can_view(event, user_id)]
+
+    return visible_events
 
 
-# ============================================
-# Routes de base
-# ============================================
+@app.post("/events")
+def create_event(
+    event: EventCreate,
+    user_id: UUID = Depends(get_current_user)
+):
+    return fake_db.create_event(event, user_id)
 
-@app.get("/")
-def root():
-    """Route racine - Information sur l'API"""
-    return {
-        "service": settings.APP_NAME,
-        "version": settings.APP_VERSION,
-        "status": "running",
-        "documentation": "/docs"
-    }
+@app.patch("/events/{event_id}")
+def update_event(
+    event_id: UUID,
+    event_update: EventUpdate,
+    user_id: UUID = Depends(get_current_user)
+):
+    event = fake_db.get_event(event_id)
+    if not event:
+        raise HTTPException(404, "Event not found")
+    
+    if not can_edit(event, user_id):
+        raise HTTPException(403, "Not allowed to edit")
 
+    update_data = event_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        event[key] = value
 
-@app.get("/health")
-def health():
-    """Health check pour les load balancers et monitoring"""
-    return {
-        "status": "ok",
-        "service": settings.APP_NAME,
-        "timestamp": datetime.utcnow().isoformat()
-    }
+    return event 
+
+@app.delete("/events/{event_id}")
+def delete_event(
+    event_id: UUID,
+    user_id: UUID = Depends(get_current_user)
+):
+    event = fake_db.get_event(event_id)
+    if not event:
+        raise HTTPException(404, "Event not found")
+
+    if not can_delete(event, user_id):
+        raise HTTPException(403, "Not allowed to delete")
+
+    fake_db.delete_event(event_id)
+    return {"message": "Event deleted"}
