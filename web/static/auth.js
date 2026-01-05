@@ -6,10 +6,10 @@ const LOGIN_PATH = "/auth/login";
 const STORAGE_TOKEN_KEY = "accessToken";
 const STORAGE_USER_KEY = "currentUser";
 
-// Champs attendus
+// Champs attendus (correspondent à l'API User)
 const LOGIN_REQ_EMAIL_FIELD = "email";
 const LOGIN_REQ_PASSWORD_FIELD = "password";
-const LOGIN_RES_TOKEN_FIELD = "accessToken";
+const LOGIN_RES_TOKEN_FIELD = "access_token";  // snake_case depuis l'API
 const LOGIN_RES_USER_FIELD = "user";
 
 /********************DOM REFS********************/

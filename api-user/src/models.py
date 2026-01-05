@@ -4,7 +4,7 @@ Modèles SQLAlchemy - Définition des tables de la base de données
 from sqlalchemy import Column, Integer, String, DateTime
 from datetime import datetime
 
-from .database import Base
+from src.database import Base
 
 
 class User(Base):

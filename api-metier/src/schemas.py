@@ -1,7 +1,7 @@
 """
 Schémas Pydantic - Validation et sérialisation des données
 """
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, computed_field
 from datetime import datetime
 from typing import Optional, List
 
@@ -39,8 +39,8 @@ class EventResponse(BaseModel):
     id: int
     title: str
     description: Optional[str] = None
-    start: datetime
-    end: datetime
+    start: datetime = Field(validation_alias="start_date")
+    end: datetime = Field(validation_alias="end_date")
     owner_id: int
     viewers: List[int] = []
     editors: List[int] = []
@@ -49,6 +49,7 @@ class EventResponse(BaseModel):
     
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 
 class MessageResponse(BaseModel):

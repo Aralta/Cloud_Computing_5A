@@ -14,8 +14,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copie du code source
-COPY . .
+# Copie du code source (sans le .env local)
+COPY app.py .
+COPY src/ ./src/
 
 # Variables d'environnement par défaut
 ENV HOST=0.0.0.0
@@ -31,4 +32,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:3001/health')" || exit 1
 
 # Commande de démarrage
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "3001"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "3001"]

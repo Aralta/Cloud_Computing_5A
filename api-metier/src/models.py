@@ -5,7 +5,7 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, JSON
 from sqlalchemy.dialects.postgresql import ARRAY
 from datetime import datetime
 
-from .database import Base
+from src.database import Base
 
 
 class Event(Base):

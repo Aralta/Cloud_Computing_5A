@@ -7,10 +7,10 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
-from ..database import get_db
-from .. import models, schemas
-from ..security import get_current_user, TokenPayload
-from ..rights import can_view, can_edit, can_delete
+from src.database import get_db
+from src import models, schemas
+from src.security import get_current_user, TokenPayload
+from src.rights import can_view, can_edit, can_delete
 
 router = APIRouter(
     prefix="/api/events",

@@ -11,7 +11,7 @@ class Settings:
     """Configuration centralisée de l'application"""
     
     # Base de données
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/client_db")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", os.getenv("DATABASE_URL_USER", "postgresql://user:password@localhost:5432/users_db"))
     
     # Sécurité JWT
     SECRET_KEY: str = os.getenv("SECRET_KEY", "dev_secret_key_change_in_production")

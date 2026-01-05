@@ -7,7 +7,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 
-from .config import settings
+from src.config import settings
 
 # Schéma HTTP Bearer pour récupérer le token
 security = HTTPBearer()

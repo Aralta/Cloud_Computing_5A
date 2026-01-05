@@ -1,8 +1,8 @@
 """
 Gestion des droits d'accès aux événements
 """
-from . import models
-from .security import TokenPayload
+from src import models
+from src.security import TokenPayload
 
 
 def can_view(event: models.Event, user: TokenPayload) -> bool:

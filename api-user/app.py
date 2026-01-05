@@ -1,42 +1,72 @@
-#!/usr/bin/env python3
 """
-API User - Point d'entrée de l'application
-
-Ce fichier sert de point d'entrée pour lancer l'API avec Uvicorn.
-La logique métier est dans le package src/.
-
-Usage:
-    python app.py                    # Mode développement
-    uvicorn app:app --reload         # Mode développement avec rechargement
-    uvicorn app:app --host 0.0.0.0   # Mode production
+Application FastAPI principale - Point d'entrée de l'API User
 """
-
-import os
 import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime
 
-# Import de l'application FastAPI depuis src/
-from src.main import app
+from src.config import settings
+from src.database import engine
+from src import models
+from src.routers import auth, users
 
-# Export pour uvicorn
-__all__ = ["app"]
+# Création des tables en base de données
+models.Base.metadata.create_all(bind=engine)
+
+# Initialisation de l'application FastAPI
+app = FastAPI(
+    title=settings.APP_NAME,
+    description="API de gestion des utilisateurs et authentification",
+    version=settings.APP_VERSION,
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+# Configuration CORS pour autoriser les requêtes cross-origin
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # En production, spécifier les domaines autorisés
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Inclusion des routers
+app.include_router(auth.router)
+app.include_router(users.router)
+
+
+# ============================================
+# Routes de base
+# ============================================
+
+@app.get("/")
+def root():
+    """Route racine - Information sur l'API"""
+    return {
+        "service": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "status": "running",
+        "documentation": "/docs"
+    }
+
+
+@app.get("/health")
+def health():
+    """Health check pour les load balancers et monitoring"""
+    return {
+        "status": "ok",
+        "service": settings.APP_NAME,
+        "timestamp": datetime.utcnow().isoformat()
+    }
 
 
 if __name__ == "__main__":
-    # Configuration depuis les variables d'environnement
-    host = os.getenv("HOST", "0.0.0.0")
-    port = int(os.getenv("PORT", 3000))
-    debug = os.getenv("DEBUG", "0") == "1"
-    
-    print(f"\n{'='*50}")
-    print(f"🚀 API User démarrée sur http://{host}:{port}")
-    print(f"📚 Documentation: http://{host}:{port}/docs")
-    print(f"{'='*50}\n")
-    
-    # Lancement du serveur
     uvicorn.run(
-        "src.main:app",
-        host=host,
-        port=port,
-        reload=debug,
-        log_level="info" if not debug else "debug"
+        "app:app",
+        host="0.0.0.0",
+        port=5001,
+        reload=settings.DEBUG
     )
+

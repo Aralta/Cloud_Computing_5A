@@ -38,15 +38,15 @@ export function ensureCalendarRendered(calendarEl) {
 }
 
 /************************EVENT MAPPING*****************************/
-/*back expects (title, description, start, end, viewUserIds, editUserIds)*/
+/*back expects (title, description, start, end, viewers, editors)*/
 function fcEventToApiPayload(fcEvent) {
   return {
     title: fcEvent.title || "",
     description: fcEvent.extendedProps.description || "",
     start: toIsoOrNull(fcEvent.start),
     end: toIsoOrNull(fcEvent.end),
-    viewUserIds: fcEvent.extendedProps.viewUserIds || [],
-    editUserIds: fcEvent.extendedProps.editUserIds || [],
+    viewers: fcEvent.extendedProps.viewUserIds || [],
+    editors: fcEvent.extendedProps.editUserIds || [],
   };
 }
 
@@ -56,25 +56,25 @@ function apiEventToFcEvent(apiEv) {
     start: apiEv.start,
     end: apiEv.end,
     extendedProps: {
-      backendEventId: apiEv.eventId,
-      ownerId: apiEv.ownerId,
+      backendEventId: apiEv.id,  // API retourne "id" pas "eventId"
+      ownerId: apiEv.owner_id,   // API retourne "owner_id" pas "ownerId"
       description: apiEv.description || "",
-      viewUserIds: apiEv.viewUserIds || [],
-      editUserIds: apiEv.editUserIds || [],
+      viewUserIds: apiEv.viewers || [],   // API retourne "viewers" pas "viewUserIds"
+      editUserIds: apiEv.editors || [],   // API retourne "editors" pas "editUserIds"
     },
   };
 }
 
 function normalizeCreatedEvent(apiCreated, fallbackPayload) {
-  const eventId = apiCreated?.eventId ?? apiCreated?.id ?? null;
+  const eventId = apiCreated?.id ?? null;  // API retourne "id"
 
   const title = apiCreated?.title ?? fallbackPayload.title ?? "";
   const description = apiCreated?.description ?? fallbackPayload.description ?? "";
   const start = apiCreated?.start ?? fallbackPayload.start ?? null;
   const end = apiCreated?.end ?? fallbackPayload.end ?? null;
-  const ownerId = apiCreated?.ownerId ?? null;
-  const viewUserIds = apiCreated?.viewUserIds ?? fallbackPayload.viewUserIds ?? [];
-  const editUserIds = apiCreated?.editUserIds ?? fallbackPayload.editUserIds ?? [];
+  const ownerId = apiCreated?.owner_id ?? null;  // API retourne "owner_id"
+  const viewUserIds = apiCreated?.viewers ?? fallbackPayload.viewers ?? [];  // "viewers"
+  const editUserIds = apiCreated?.editors ?? fallbackPayload.editors ?? [];  // "editors"
 
   return {
     title,
@@ -128,10 +128,8 @@ function renderUsersForCurrentModal() {
 /**********************FULLCALENDAR*************************/
 async function loadEvents(fetchInfo, successCallback, failureCallback) {
   try {
-    const start = encodeURIComponent(fetchInfo.startStr);
-    const end = encodeURIComponent(fetchInfo.endStr);
-
-    const data = await apiFetch(`/events?start=${start}&end=${end}`);
+    // L'API events ne supporte pas les paramètres start/end, on récupère tout
+    const data = await apiFetch(`/events`, { useMetierApi: true });
     const fcEvents = (data || []).map(apiEventToFcEvent);
 
     successCallback(fcEvents);
@@ -160,7 +158,7 @@ async function onUpdateEvent(info) {
 
   try {
     const payload = fcEventToApiPayload(info.event);
-    await apiFetch(`/events/${backendId}`, { method: "PATCH", body: payload });
+    await apiFetch(`/events/${backendId}`, { method: "PUT", body: payload, useMetierApi: true });
   } catch (e) {
     console.error(e);
     alert("Update refusée par le backend. Oups");
@@ -257,11 +255,11 @@ export async function handleModalSubmit() {
         description,
         start: toIsoOrNull(startDate),
         end: toIsoOrNull(endDate),
-        viewUserIds,
-        editUserIds: filteredEditUserIds,
+        viewers: viewUserIds,           // API attend "viewers"
+        editors: filteredEditUserIds,   // API attend "editors"
       };
 
-      const created = await apiFetch(`/events`, { method: "POST", body: payload });
+      const created = await apiFetch(`/events`, { method: "POST", body: payload, useMetierApi: true });
       const fcEventObj = normalizeCreatedEvent(created, payload);
 
       calendar.addEvent(fcEventObj);
@@ -283,11 +281,11 @@ export async function handleModalSubmit() {
       description,
       start: toIsoOrNull(startDate),
       end: toIsoOrNull(endDate),
-      viewUserIds,
-      editUserIds: filteredEditUserIds,
+      viewers: viewUserIds,           // API attend "viewers"
+      editors: filteredEditUserIds,   // API attend "editors"
     };
 
-    await apiFetch(`/events/${backendId}`, { method: "PATCH", body: payload });
+    await apiFetch(`/events/${backendId}`, { method: "PUT", body: payload, useMetierApi: true });
 
     // Applique localement après succès
     ev.setProp("title", title);
@@ -334,7 +332,7 @@ export async function handleModalDelete() {
       closeEventModal();
       return;
     }
-    await apiFetch(`/events/${backendId}`, { method: "DELETE" });
+    await apiFetch(`/events/${backendId}`, { method: "DELETE", useMetierApi: true });
     ev.remove();
     closeEventModal();
   } catch (e) {

@@ -1,4 +1,6 @@
-export const API_BASE = "http://localhost:3000/api"; //@TODO ADAPTER EN PROD
+// URLs des APIs - à adapter selon l'environnement
+export const API_USER_BASE = "http://localhost:3000/api";  // Auth + Users
+export const API_METIER_BASE = "http://localhost:3001/api"; // Events
 
 let tokenProvider = () => "";
 let authErrorHandler = () => {};
@@ -12,7 +14,7 @@ export function setAuthErrorHandler(fn) {
 }
 
 /**Si JSON alors parse, sinon string**/
-export async function apiFetch(path, { method = "GET", body, headers = {}, signal } = {}) {
+export async function apiFetch(path, { method = "GET", body, headers = {}, signal, useMetierApi = false } = {}) {
   const token = tokenProvider();
   const finalHeaders = { ...headers };
 
@@ -25,7 +27,10 @@ export async function apiFetch(path, { method = "GET", body, headers = {}, signa
     finalHeaders["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
+  // Choisir la bonne base URL selon le type d'API
+  const baseUrl = useMetierApi ? API_METIER_BASE : API_USER_BASE;
+
+  const res = await fetch(`${baseUrl}${path}`, {
     method,
     headers: finalHeaders,
     body: hasBody ? JSON.stringify(body) : undefined,
