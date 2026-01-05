@@ -16,7 +16,7 @@ from datetime import datetime
 # Configuration
 HOST = "0.0.0.0"
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8080
-FRONT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "front")
+STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
 
 class APIHandler(http.server.BaseHTTPRequestHandler):
@@ -67,11 +67,11 @@ class APIHandler(http.server.BaseHTTPRequestHandler):
 
         # Page d'accueil -> index.html
         if path == "/" or path == "/index.html":
-            self._serve_file(os.path.join(FRONT_DIR, "index.html"))
+            self._serve_file(os.path.join(STATIC_DIR, "index.html"))
 
         # Fichiers statiques du front (js, css, etc.)
         elif path.endswith((".js", ".css", ".html", ".png", ".jpg", ".ico", ".svg")):
-            filepath = os.path.join(FRONT_DIR, path.lstrip("/"))
+            filepath = os.path.join(STATIC_DIR, path.lstrip("/"))
             self._serve_file(filepath)
 
         elif path == "/health":
@@ -79,7 +79,7 @@ class APIHandler(http.server.BaseHTTPRequestHandler):
 
         elif path == "/api/info":
             self._send_json({
-                "server": "Mini HTTPS Server",
+                "server": "Mini HTTP Server",
                 "python_version": sys.version,
                 "endpoints": ["/", "/health", "/api/info", "/api/echo"]
             })
@@ -130,7 +130,7 @@ def run_server():
     print(f"  GET  http://localhost:{PORT}/health    - Health check")
     print(f"  GET  http://localhost:{PORT}/api/info  - Informations serveur")
     print(f"  POST http://localhost:{PORT}/api/echo  - Echo JSON")
-    print(f"\nFichiers front servis depuis: {FRONT_DIR}")
+    print(f"\nFichiers statiques servis depuis: {STATIC_DIR}")
     print(f"\nAppuyez sur Ctrl+C pour arrêter le serveur\n")
 
     try:

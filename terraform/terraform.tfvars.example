@@ -1,0 +1,27 @@
+# ============================================
+# Fichier de variables pour la production
+# Copier en terraform.tfvars et adapter
+# ============================================
+
+aws_region   = "us-east-1"
+environment  = "prod"
+project_name = "calendar"
+
+# VPC
+vpc_cidr             = "10.0.0.0/16"
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_cidrs = ["10.0.10.0/24", "10.0.20.0/24"]
+
+# RDS (db.t3.micro = Free Tier)
+db_instance_class = "db.t3.micro"
+db_username       = "calendar_admin"
+db_password       = "CHANGE_ME_STRONG_PASSWORD_123!"
+
+# ECS
+ecs_task_cpu    = 256
+ecs_task_memory = 512
+app_count       = 1
+
+# JWT
+jwt_secret     = "CHANGE_ME_SUPER_SECRET_JWT_KEY_PRODUCTION"
+jwt_expiration = 3600

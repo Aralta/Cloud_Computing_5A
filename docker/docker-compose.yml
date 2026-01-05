@@ -1,0 +1,133 @@
+# Docker Compose - Production
+version: "3.8"
+
+services:
+  # ============================================
+  # Service Web (Front + Back)
+  # ============================================
+  web:
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+    container_name: calendar-web
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - API_METIER_URL=http://api-metier:3001
+      - API_USER_URL=http://api-user:3000
+    depends_on:
+      api-metier:
+        condition: service_healthy
+      api-user:
+        condition: service_healthy
+    networks:
+      - calendar-network
+    restart: unless-stopped
+
+  # ============================================
+  # API Métier (Calendrier/Events)
+  # ============================================
+  api-metier:
+    build:
+      context: ../api-metier
+      dockerfile: Dockerfile
+    container_name: calendar-api-metier
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-metier:5432/${POSTGRES_DB_METIER}
+      - API_USER_URL=http://api-user:3000
+    depends_on:
+      db-metier:
+        condition: service_healthy
+    networks:
+      - calendar-network
+    restart: unless-stopped
+
+  # ============================================
+  # API Utilisateur (Auth/Users)
+  # ============================================
+  api-user:
+    build:
+      context: ../api-user
+      dockerfile: Dockerfile
+    container_name: calendar-api-user
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-user:5432/${POSTGRES_DB_USER}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-3600}
+    depends_on:
+      db-user:
+        condition: service_healthy
+    networks:
+      - calendar-network
+    restart: unless-stopped
+
+  # ============================================
+  # Base de données - API Métier (Events)
+  # ============================================
+  db-metier:
+    image: postgres:15-alpine
+    container_name: calendar-db-metier
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB_METIER}
+    volumes:
+      - postgres_data_metier:/var/lib/postgresql/data
+      - ./init-db/metier:/docker-entrypoint-initdb.d
+    networks:
+      - calendar-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_METIER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Base de données - API Utilisateur (Users)
+  # ============================================
+  db-user:
+    image: postgres:15-alpine
+    container_name: calendar-db-user
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB_USER}
+    volumes:
+      - postgres_data_user:/var/lib/postgresql/data
+      - ./init-db/user:/docker-entrypoint-initdb.d
+    networks:
+      - calendar-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# ============================================
+# Volumes
+# ============================================
+volumes:
+  postgres_data_metier:
+    driver: local
+  postgres_data_user:
+    driver: local
+
+# ============================================
+# Networks
+# ============================================
+networks:
+  calendar-network:
+    driver: bridge

@@ -1,0 +1,71 @@
+# Docker Compose - Développement
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+version: "3.8"
+
+services:
+  # ============================================
+  # Service Web (Front + Back) - Dev
+  # ============================================
+  web:
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+    volumes:
+      - ../web/static:/app/static:ro
+      - ../web/server.py:/app/server.py:ro
+    environment:
+      - DEBUG=1
+
+  # ============================================
+  # API Métier - Dev
+  # ============================================
+  api-metier:
+    build:
+      context: ../api-metier
+      dockerfile: Dockerfile
+    volumes:
+      - ../api-metier:/app
+    environment:
+      - DEBUG=1
+      - FLASK_ENV=development
+
+  # ============================================
+  # API Utilisateur - Dev
+  # ============================================
+  api-user:
+    build:
+      context: ../api-user
+      dockerfile: Dockerfile
+    volumes:
+      - ../api-user:/app
+    environment:
+      - DEBUG=1
+      - FLASK_ENV=development
+
+  # ============================================
+  # Base de données Métier - Dev
+  # ============================================
+  db-metier:
+    ports:
+      - "5432:5432"
+
+  # ============================================
+  # Base de données User - Dev
+  # ============================================
+  db-user:
+    ports:
+      - "5433:5432"
+
+  # ============================================
+  # Adminer (Interface DB)
+  # ============================================
+  adminer:
+    image: adminer:latest
+    container_name: calendar-adminer
+    ports:
+      - "8081:8080"
+    networks:
+      - calendar-network
+    depends_on:
+      - db-metier
+      - db-user
