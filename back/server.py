@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """
-Mini serveur HTTPS en Python
+Mini serveur HTTP en Python
 Usage: python server.py [port]
-Par défaut: port 8443
+Par défaut: port 8080
 """
 
 import http.server
-import ssl
 import json
 import os
 import sys
@@ -16,9 +15,7 @@ from datetime import datetime
 
 # Configuration
 HOST = "0.0.0.0"
-PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8443
-CERT_FILE = "cert.pem"
-KEY_FILE = "key.pem"
+PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8080
 FRONT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "front")
 
 
@@ -117,63 +114,22 @@ class APIHandler(http.server.BaseHTTPRequestHandler):
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {args[0]}")
 
 
-def generate_self_signed_cert():
-    """Génère un certificat auto-signé si nécessaire"""
-    if os.path.exists(CERT_FILE) and os.path.exists(KEY_FILE):
-        print("✓ Certificats existants trouvés")
-        return True
-
-    print("⚠ Certificats non trouvés. Génération...")
-    try:
-        import subprocess
-        cmd = [
-            "openssl", "req", "-x509", "-newkey", "rsa:2048",
-            "-keyout", KEY_FILE, "-out", CERT_FILE,
-            "-days", "365", "-nodes",
-            "-subj", "/CN=localhost"
-        ]
-        subprocess.run(cmd, check=True, capture_output=True)
-        print("✓ Certificats générés avec succès")
-        return True
-    except Exception as e:
-        print(f"✗ Erreur génération certificats: {e}")
-        print("\nPour générer manuellement:")
-        print(f"  openssl req -x509 -newkey rsa:2048 -keyout {KEY_FILE} -out {CERT_FILE} -days 365 -nodes -subj '/CN=localhost'")
-        return False
-
-
 def run_server():
-    """Lance le serveur HTTPS"""
+    """Lance le serveur HTTP"""
     # Changer vers le répertoire du script
     os.chdir(os.path.dirname(os.path.abspath(__file__)) or ".")
-
-    # Vérifier/générer les certificats
-    if not generate_self_signed_cert():
-        print("\n⚠ Démarrage en HTTP (non sécurisé)...")
-        use_https = False
-    else:
-        use_https = True
 
     # Créer le serveur
     server = http.server.HTTPServer((HOST, PORT), APIHandler)
 
-    if use_https:
-        # Configurer SSL
-        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-        context.load_cert_chain(CERT_FILE, KEY_FILE)
-        server.socket = context.wrap_socket(server.socket, server_side=True)
-        protocol = "https"
-    else:
-        protocol = "http"
-
     print(f"\n{'='*50}")
-    print(f"🚀 Serveur démarré sur {protocol}://{HOST}:{PORT}")
+    print(f"🚀 Serveur démarré sur http://{HOST}:{PORT}")
     print(f"{'='*50}")
     print(f"\nEndpoints disponibles:")
-    print(f"  GET  {protocol}://localhost:{PORT}/          - index.html (front)")
-    print(f"  GET  {protocol}://localhost:{PORT}/health    - Health check")
-    print(f"  GET  {protocol}://localhost:{PORT}/api/info  - Informations serveur")
-    print(f"  POST {protocol}://localhost:{PORT}/api/echo  - Echo JSON")
+    print(f"  GET  http://localhost:{PORT}/          - index.html (front)")
+    print(f"  GET  http://localhost:{PORT}/health    - Health check")
+    print(f"  GET  http://localhost:{PORT}/api/info  - Informations serveur")
+    print(f"  POST http://localhost:{PORT}/api/echo  - Echo JSON")
     print(f"\nFichiers front servis depuis: {FRONT_DIR}")
     print(f"\nAppuyez sur Ctrl+C pour arrêter le serveur\n")
 
