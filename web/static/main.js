@@ -1,5 +1,5 @@
 import { setAuthErrorHandler, setTokenProvider } from "./api.js";
-import { getToken, handleSessionExpired, initAuthUI, login, logout, setLoginError, showCalendar, showLogin } from "./auth.js";
+import { getToken, handleSessionExpired, initAuthUI, login, logout, register, setLoginError, setRegisterError, showCalendar, showLogin, showLoginForm, showRegisterForm } from "./auth.js";
 import { configureCalendar, destroyCalendar, ensureCalendarRendered, handleModalDelete, handleModalSubmit, handleRetryUsers, refetchEvents } from "./calendar.js";
 import { closeEventModal, getModalState, initModal, isModalOpen } from "./modal.js";
 import { createUsersMultiSelectUI } from "./users.js";
@@ -12,6 +12,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginEmailEl = document.getElementById("loginEmail");
   const loginPasswordEl = document.getElementById("loginPassword");
   const loginErrorEl = document.getElementById("loginError");
+
+  // Register refs
+  const registerFormEl = document.getElementById("registerForm");
+  const registerNameEl = document.getElementById("registerName");
+  const registerEmailEl = document.getElementById("registerEmail");
+  const registerPasswordEl = document.getElementById("registerPassword");
+  const registerPasswordConfirmEl = document.getElementById("registerPasswordConfirm");
+  const registerErrorEl = document.getElementById("registerError");
+  const authTitleEl = document.getElementById("authTitle");
+  const switchToRegisterEl = document.getElementById("switchToRegister");
+  const switchToLoginEl = document.getElementById("switchToLogin");
 
   const topbarEl = document.getElementById("topbar");
   const userInfoEl = document.getElementById("userInfo");
@@ -62,7 +73,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   //authUI
   initAuthUI(
-    { loginViewEl, calendarViewEl, topbarEl, userInfoEl, loginErrorEl, loginPasswordEl },
+    { 
+      loginViewEl, 
+      calendarViewEl, 
+      topbarEl, 
+      userInfoEl, 
+      loginErrorEl, 
+      loginPasswordEl,
+      loginFormEl,
+      registerFormEl,
+      registerErrorEl,
+      authTitleEl,
+      switchToRegisterEl,
+      switchToLoginEl,
+    },
     {
       onEnterLogin: () => {
         // Nettoyage centralisé quand on repasse au login
@@ -109,6 +133,58 @@ document.addEventListener("DOMContentLoaded", () => {
 
   //logout
   logoutBtnEl.addEventListener("click", () => logout());
+
+  //switch to register
+  switchToRegisterEl.addEventListener("click", (e) => {
+    e.preventDefault();
+    showRegisterForm();
+  });
+
+  //switch to login
+  switchToLoginEl.addEventListener("click", (e) => {
+    e.preventDefault();
+    showLoginForm();
+  });
+
+  //register form
+  registerFormEl.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const name = (registerNameEl.value || "").trim();
+    const email = (registerEmailEl.value || "").trim();
+    const password = registerPasswordEl.value || "";
+    const passwordConfirm = registerPasswordConfirmEl.value || "";
+
+    if (!name || !email || !password) {
+      setRegisterError("Tous les champs sont requis.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setRegisterError("Le mot de passe doit contenir au moins 6 caractères.");
+      return;
+    }
+
+    if (password !== passwordConfirm) {
+      setRegisterError("Les mots de passe ne correspondent pas.");
+      return;
+    }
+
+    const submitBtn = registerFormEl.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+    setRegisterError("");
+
+    try {
+      await register(name, email, password);
+      showCalendar();
+    } catch (err) {
+      console.error(err);
+      const msg = err?.message?.includes("409") ? "Cet email est déjà utilisé." : "Inscription impossible. Réessayez.";
+      setRegisterError(msg);
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
 
   //refresh
   refreshBtnEl.addEventListener("click", () => refetchEvents());

@@ -24,7 +24,7 @@
       </header>
 
       <section id="loginView" class="panel">
-        <h1>Connexion</h1>
+        <h1 id="authTitle">Connexion</h1>
 
         <form id="loginForm" class="form">
           <label>
@@ -41,6 +41,37 @@
 
           <div id="loginError" class="error hidden" role="alert"></div>
         </form>
+
+        <form id="registerForm" class="form hidden">
+          <label>
+            Nom
+            <input id="registerName" type="text" autocomplete="name" required />
+          </label>
+
+          <label>
+            Email
+            <input id="registerEmail" type="email" autocomplete="email" required />
+          </label>
+
+          <label>
+            Mot de passe
+            <input id="registerPassword" type="password" autocomplete="new-password" required minlength="6" />
+          </label>
+
+          <label>
+            Confirmer le mot de passe
+            <input id="registerPasswordConfirm" type="password" autocomplete="new-password" required minlength="6" />
+          </label>
+
+          <button type="submit">Créer mon compte</button>
+
+          <div id="registerError" class="error hidden" role="alert"></div>
+        </form>
+
+        <div class="auth-switch">
+          <span id="switchToRegister">Pas encore de compte ? <a href="#">S'inscrire</a></span>
+          <span id="switchToLogin" class="hidden">Déjà un compte ? <a href="#">Se connecter</a></span>
+        </div>
       </section>
 
       <section id="calendarView" class="hidden">

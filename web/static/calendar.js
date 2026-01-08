@@ -1,4 +1,5 @@
 import { apiFetch } from "./api.js";
+import { getCurrentUser } from "./auth.js";
 import { getUsersCache, loadUsers } from "./users.js";
 import {
   closeEventModal,
@@ -6,6 +7,7 @@ import {
   getModalSelectEls,
   openCreateModal,
   openEditModal,
+  openViewModal,
   readFormBasics,
   setModalBusy,
   toIsoOrNull,
@@ -148,7 +150,23 @@ function onSelectOpenCreateModal(info) {
 }
 
 async function onUpdateEvent(info) {
-  const backendId = info.event.extendedProps.backendEventId;
+  const fcEvent = info.event;
+  const currentUser = getCurrentUser();
+  const currentUserId = currentUser?.id;
+  
+  const ownerId = fcEvent.extendedProps.ownerId;
+  const editUserIds = fcEvent.extendedProps.editUserIds || [];
+  
+  // Vérifier si l'utilisateur peut éditer
+  const canEdit = currentUserId === ownerId || editUserIds.includes(currentUserId);
+  
+  if (!canEdit) {
+    alert("Vous n'avez pas les droits pour modifier cet événement.");
+    info.revert();
+    return;
+  }
+
+  const backendId = fcEvent.extendedProps.backendEventId;
 
   if (!backendId) {
     alert("Cet event n'a pas d'ID backend (création pas confirmée ?).");
@@ -168,10 +186,25 @@ async function onUpdateEvent(info) {
 
 function onEventClickOpenEditModal(clickInfo) {
   clickInfo.jsEvent?.preventDefault?.();
-  openEditModal(clickInfo.event);
-
-  renderUsersForCurrentModal();
-  ensureUsersReadyForModal();
+  
+  const fcEvent = clickInfo.event;
+  const currentUser = getCurrentUser();
+  const currentUserId = currentUser?.id;
+  
+  const ownerId = fcEvent.extendedProps.ownerId;
+  const editUserIds = fcEvent.extendedProps.editUserIds || [];
+  
+  // Vérifier si l'utilisateur peut éditer (owner ou editor)
+  const canEdit = currentUserId === ownerId || editUserIds.includes(currentUserId);
+  
+  if (canEdit) {
+    openEditModal(fcEvent);
+    renderUsersForCurrentModal();
+    ensureUsersReadyForModal();
+  } else {
+    // L'utilisateur est seulement viewer -> mode lecture seule
+    openViewModal(fcEvent);
+  }
 }
 
 /********************CALENDAR CONFIG******************************/

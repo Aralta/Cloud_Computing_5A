@@ -3,6 +3,7 @@ import { resetUsersCache } from "./users.js";
 
 /********************VAR AUTH********************/
 const LOGIN_PATH = "/auth/login";
+const REGISTER_PATH = "/auth/register";
 const STORAGE_TOKEN_KEY = "accessToken";
 const STORAGE_USER_KEY = "currentUser";
 
@@ -21,6 +22,13 @@ let userInfoEl = null;
 
 let loginErrorEl = null;
 let loginPasswordEl = null;
+let loginFormEl = null;
+
+let registerFormEl = null;
+let registerErrorEl = null;
+let authTitleEl = null;
+let switchToRegisterEl = null;
+let switchToLoginEl = null;
 
 /********************Hooks********************/
 //INJECTED pour que auth puisse clean
@@ -60,6 +68,13 @@ export function initAuthUI(refs, hooks = {}) {
   userInfoEl = refs.userInfoEl;
   loginErrorEl = refs.loginErrorEl;
   loginPasswordEl = refs.loginPasswordEl;
+  loginFormEl = refs.loginFormEl;
+  
+  registerFormEl = refs.registerFormEl;
+  registerErrorEl = refs.registerErrorEl;
+  authTitleEl = refs.authTitleEl;
+  switchToRegisterEl = refs.switchToRegisterEl;
+  switchToLoginEl = refs.switchToLoginEl;
 
   onEnterLogin = typeof hooks.onEnterLogin === "function" ? hooks.onEnterLogin : () => {};
   onEnterCalendar = typeof hooks.onEnterCalendar === "function" ? hooks.onEnterCalendar : () => {};
@@ -145,4 +160,60 @@ export function handleSessionExpired() {
   clearSession();
   resetUsersCache();
   showLogin("Session expirée, reconnection obligatoire.");
+}
+
+/************************REGISTER*****************************/
+export function setRegisterError(msg) {
+  if (!registerErrorEl) return;
+
+  if (!msg) {
+    registerErrorEl.textContent = "";
+    registerErrorEl.classList.add("hidden");
+    return;
+  }
+
+  registerErrorEl.textContent = msg;
+  registerErrorEl.classList.remove("hidden");
+}
+
+export async function register(name, email, password) {
+  setRegisterError("");
+
+  const payload = {
+    name,
+    email,
+    password,
+  };
+
+  const data = await apiFetch(REGISTER_PATH, { method: "POST", body: payload });
+
+  const token = data?.[LOGIN_RES_TOKEN_FIELD];
+  const user = data?.[LOGIN_RES_USER_FIELD];
+
+  if (!token || !user) {
+    throw new Error("Réponse register invalide (token/user manquant).");
+  }
+
+  setSession(token, user);
+  resetUsersCache();
+}
+
+export function showRegisterForm() {
+  if (loginFormEl) loginFormEl.classList.add("hidden");
+  if (registerFormEl) registerFormEl.classList.remove("hidden");
+  if (authTitleEl) authTitleEl.textContent = "Inscription";
+  if (switchToRegisterEl) switchToRegisterEl.classList.add("hidden");
+  if (switchToLoginEl) switchToLoginEl.classList.remove("hidden");
+  setLoginError("");
+  setRegisterError("");
+}
+
+export function showLoginForm() {
+  if (loginFormEl) loginFormEl.classList.remove("hidden");
+  if (registerFormEl) registerFormEl.classList.add("hidden");
+  if (authTitleEl) authTitleEl.textContent = "Connexion";
+  if (switchToRegisterEl) switchToRegisterEl.classList.remove("hidden");
+  if (switchToLoginEl) switchToLoginEl.classList.add("hidden");
+  setLoginError("");
+  setRegisterError("");
 }

@@ -108,6 +108,24 @@ body {
   border-radius: 8px;
 }
 
+/* Auth switch link */
+.auth-switch {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.auth-switch a {
+  color: #0066cc;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.auth-switch a:hover {
+  text-decoration: underline;
+}
+
 /* Calendar container */
 #calendarView {
   background: #fff;

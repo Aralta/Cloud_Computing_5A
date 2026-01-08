@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS events (
     description TEXT,
     start_date TIMESTAMP NOT NULL,
     end_date TIMESTAMP NOT NULL,
-    user_id INTEGER NOT NULL,
+    owner_id INTEGER NOT NULL,
     viewers JSONB DEFAULT '[]',
     editors JSONB DEFAULT '[]',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS events (
 -- ============================================
 -- Index pour les performances
 -- ============================================
-CREATE INDEX IF NOT EXISTS idx_events_user_id ON events(user_id);
+CREATE INDEX IF NOT EXISTS idx_events_owner_id ON events(owner_id);
 CREATE INDEX IF NOT EXISTS idx_events_start_date ON events(start_date);
 CREATE INDEX IF NOT EXISTS idx_events_end_date ON events(end_date);
 

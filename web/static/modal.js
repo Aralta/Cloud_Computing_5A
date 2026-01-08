@@ -147,6 +147,7 @@ export function openEditModal(fcEvent) {
 
   eventModalTitleEl.textContent = "Modifier un événement";
   modalSubmitBtnEl.textContent = "Enregistrer";
+  modalSubmitBtnEl.classList.remove("hidden");
   modalDeleteBtnEl.classList.remove("hidden");
 
   eventTitleEl.value = fcEvent.title || "";
@@ -155,8 +156,50 @@ export function openEditModal(fcEvent) {
   eventStartEl.value = dateToDateTimeLocalValue(fcEvent.start);
   eventEndEl.value = dateToDateTimeLocalValue(fcEvent.end);
 
+  // Activer les champs pour l'édition
+  setFieldsReadOnly(false);
+
   showEventModal();
   eventTitleEl.focus();
+}
+
+export function openViewModal(fcEvent) {
+  modalState = {
+    mode: "view",
+    event: fcEvent,
+    snapshot: {
+      title: fcEvent.title || "",
+      description: fcEvent.extendedProps.description || "",
+      viewUserIds: fcEvent.extendedProps.viewUserIds || [],
+      editUserIds: fcEvent.extendedProps.editUserIds || [],
+      start: fcEvent.start ? new Date(fcEvent.start) : null,
+      end: fcEvent.end ? new Date(fcEvent.end) : null,
+    },
+  };
+
+  eventModalTitleEl.textContent = "Détails de l'événement";
+  modalSubmitBtnEl.classList.add("hidden");
+  modalDeleteBtnEl.classList.add("hidden");
+
+  eventTitleEl.value = fcEvent.title || "";
+  eventDescEl.value = fcEvent.extendedProps.description || "";
+
+  eventStartEl.value = dateToDateTimeLocalValue(fcEvent.start);
+  eventEndEl.value = dateToDateTimeLocalValue(fcEvent.end);
+
+  // Désactiver les champs en lecture seule
+  setFieldsReadOnly(true);
+
+  showEventModal();
+}
+
+function setFieldsReadOnly(readOnly) {
+  if (eventTitleEl) eventTitleEl.disabled = readOnly;
+  if (eventDescEl) eventDescEl.disabled = readOnly;
+  if (eventStartEl) eventStartEl.disabled = readOnly;
+  if (eventEndEl) eventEndEl.disabled = readOnly;
+  if (viewersSelectEl) viewersSelectEl.disabled = readOnly;
+  if (editorsSelectEl) editorsSelectEl.disabled = readOnly;
 }
 
 /************************READ FORM*****************************/
