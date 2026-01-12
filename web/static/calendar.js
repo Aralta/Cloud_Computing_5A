@@ -53,18 +53,23 @@ function fcEventToApiPayload(fcEvent) {
 }
 
 function apiEventToFcEvent(apiEv) {
-  return {
+  const eventId = apiEv?.eventId ?? apiEv?.id ?? null;
+
+  const fc = {
+    id: eventId ? String(eventId) : undefined,
     title: apiEv.title,
     start: apiEv.start,
     end: apiEv.end,
     extendedProps: {
-      backendEventId: apiEv.id,  // API retourne "id" pas "eventId"
-      ownerId: apiEv.owner_id,   // API retourne "owner_id" pas "ownerId"
+      backendEventId: eventId,
+      ownerId: apiEv.ownerId,
       description: apiEv.description || "",
-      viewUserIds: apiEv.viewers || [],   // API retourne "viewers" pas "viewUserIds"
-      editUserIds: apiEv.editors || [],   // API retourne "editors" pas "editUserIds"
+      viewUserIds: apiEv.viewUserIds || [],
+      editUserIds: apiEv.editUserIds || [],
     },
   };
+
+  return applyRandomColors(fc, eventId);
 }
 
 function normalizeCreatedEvent(apiCreated, fallbackPayload) {
@@ -78,7 +83,8 @@ function normalizeCreatedEvent(apiCreated, fallbackPayload) {
   const viewUserIds = apiCreated?.viewers ?? fallbackPayload.viewers ?? [];  // "viewers"
   const editUserIds = apiCreated?.editors ?? fallbackPayload.editors ?? [];  // "editors"
 
-  return {
+  const fc = {
+    id: eventId ? String(eventId) : undefined,
     title,
     start,
     end,
@@ -297,8 +303,9 @@ export async function handleModalSubmit() {
       const created = await apiFetch(`/events`, { method: "POST", body: payload, useMetierApi: true });
       const fcEventObj = normalizeCreatedEvent(created, payload);
 
-      calendar.addEvent(fcEventObj);
+      //calendar.addEvent(fcEventObj);
       closeEventModal();
+      refetchEvents();
       return;
     }
 
