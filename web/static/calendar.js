@@ -90,6 +90,8 @@ function normalizeCreatedEvent(apiCreated, fallbackPayload) {
       editUserIds,
     },
   };
+
+  applyRandomColors(fc, eventId);
 }
 
 /**********************USERS IN MODAL*************************/
@@ -388,4 +390,37 @@ export async function handleRetryUsers() {
     console.error(e);
     usersUI.showUsersLoading("Erreur de chargement");
   }
+}
+
+/**********************EVENT COLORING**************************/
+const EVENT_COLORS = [
+  { bg: "#0b57d0", border: "#0842a0", text: "#fff" },
+  { bg: "#1e8e3e", border: "#146c2e", text: "#fff" },
+  { bg: "#c26401", border: "#8a4600", text: "#fff" },
+  { bg: "#6f42c1", border: "#4b2a87", text: "#fff" },
+  { bg: "#00838f", border: "#005b63", text: "#fff" },
+  { bg: "#d93025", border: "#a50e0e", text: "#fff" },
+  { bg: "#5f6368", border: "#3c4043", text: "#fff" },
+  { bg: "#b80672", border: "#7a0450", text: "#fff" },
+];
+
+const colorByEventId = new Map();
+
+function getRandomColorForId(id) {
+  const key = String(id ?? "");
+  if (!key) return EVENT_COLORS[0];
+
+  if (!colorByEventId.has(key)) {
+    const c = EVENT_COLORS[Math.floor(Math.random() * EVENT_COLORS.length)];
+    colorByEventId.set(key, c);
+  }
+  return colorByEventId.get(key);
+}
+
+function applyRandomColors(fcEventObj, idForColor) {
+  const c = getRandomColorForId(idForColor);
+  fcEventObj.backgroundColor = c.bg;
+  fcEventObj.borderColor = c.border;
+  fcEventObj.textColor = c.text;
+  return fcEventObj;
 }
