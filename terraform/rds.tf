@@ -1,5 +1,6 @@
 # ============================================
 # RDS - Base de données PostgreSQL
+# - configuration des instances RDS pour l'application Calendar
 # ============================================
 
 # Subnet group pour RDS
@@ -14,12 +15,13 @@ resource "aws_db_subnet_group" "main" {
 
 # ============================================
 # RDS Instance - API Métier (Events DB)
+# - base de données pour les événements du calendrier
 # ============================================
 resource "aws_db_instance" "events" {
   identifier = "${var.project_name}-events-db"
 
   engine         = "postgres"
-  engine_version = "15.4"
+  engine_version = "15"
   instance_class = var.db_instance_class
 
   allocated_storage     = 20
@@ -52,12 +54,13 @@ resource "aws_db_instance" "events" {
 
 # ============================================
 # RDS Instance - API Utilisateur (Users DB)
+# - base de données pour les utilisateurs du calendrier
 # ============================================
 resource "aws_db_instance" "users" {
   identifier = "${var.project_name}-users-db"
 
   engine         = "postgres"
-  engine_version = "15.4"
+  engine_version = "15"
   instance_class = var.db_instance_class
 
   allocated_storage     = 20

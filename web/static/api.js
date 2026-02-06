@@ -1,6 +1,8 @@
-// URLs des APIs - à adapter selon l'environnement
-export const API_USER_BASE = "http://localhost:3000/api";  // Auth + Users
-export const API_METIER_BASE = "http://localhost:3001/api"; // Events
+// URLs des APIs - URLs relatives pour passer par l'ALB
+// En production, les requêtes passent par le même domaine (ALB)
+// L'ALB route /api/events/* vers api-metier et /api/auth/*, /api/users/* vers api-user
+export const API_USER_BASE = "/api";  // Auth + Users
+export const API_METIER_BASE = "/api"; // Events (routé par ALB vers api-metier)
 
 let tokenProvider = () => "";
 let authErrorHandler = () => {};

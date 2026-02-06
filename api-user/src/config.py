@@ -22,6 +22,8 @@ class Settings:
     APP_NAME: str = "API User"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = os.getenv("DEBUG", "0") == "1"
+    # Mot de passe pour opérations d'administration sensibles (purge DB)
+    PURGE_PASSWORD: str = os.getenv("PURGE_PASSWORD", "")
 
 
 settings = Settings()

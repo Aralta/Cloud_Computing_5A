@@ -281,6 +281,21 @@ body.modal-open {
   background: #fff;
 }
 
+
+
+.btn-primary,
+.form button.btn-primary {
+  background: #0b57d0 !important;
+  border-color: #0b57d0;
+  color: #111 !important;
+}
+
+.btn-primary:hover,
+.form button.btn-primary:hover {
+  background: #0842a0;
+  border-color: #0842a0;
+}
+
 .btn-danger {
   background: #fff;
   border-color: #ffb3bf;

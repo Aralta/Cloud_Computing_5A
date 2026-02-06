@@ -24,6 +24,8 @@ class Settings:
     
     # URL de l'API User pour validation des tokens (optionnel)
     API_USER_URL: str = os.getenv("API_USER_URL", "http://api-user:3000")
+    # Mot de passe pour opérations d'administration sensibles (purge DB)
+    PURGE_PASSWORD: str = os.getenv("PURGE_PASSWORD", "")
 
 
 settings = Settings()

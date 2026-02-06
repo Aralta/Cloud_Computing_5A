@@ -1,5 +1,6 @@
 # ============================================
 # ALB - Application Load Balancer
+# - provisions un ALB pour distribuer le trafic
 # ============================================
 
 resource "aws_lb" "main" {
@@ -18,6 +19,7 @@ resource "aws_lb" "main" {
 
 # ============================================
 # Target Groups
+# - définissent les groupes cibles pour l'ALB
 # ============================================
 
 # Target Group - Web
@@ -91,6 +93,7 @@ resource "aws_lb_target_group" "api_user" {
 
 # ============================================
 # Listeners
+# - gèrent le trafic entrant pour l'ALB
 # ============================================
 
 # HTTP Listener (redirect to HTTPS en prod)
@@ -107,6 +110,7 @@ resource "aws_lb_listener" "http" {
 
 # ============================================
 # Listener Rules (routing)
+# - définissent les règles de routage pour l'ALB
 # ============================================
 
 # Route /api/events/* vers API Métier

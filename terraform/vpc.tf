@@ -1,5 +1,6 @@
 # ============================================
 # VPC - Virtual Private Cloud
+# - configuration du réseau AWS
 # ============================================
 
 resource "aws_vpc" "main" {
@@ -14,6 +15,7 @@ resource "aws_vpc" "main" {
 
 # ============================================
 # Internet Gateway
+# - permet la communication entre le VPC et Internet
 # ============================================
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
@@ -25,6 +27,7 @@ resource "aws_internet_gateway" "main" {
 
 # ============================================
 # Subnets Publics (pour ALB)
+# - permettent l'accès public aux ressources
 # ============================================
 resource "aws_subnet" "public" {
   count                   = length(var.public_subnet_cidrs)
@@ -41,6 +44,7 @@ resource "aws_subnet" "public" {
 
 # ============================================
 # Subnets Privés (pour ECS et RDS)
+# - isolent les ressources du trafic public
 # ============================================
 resource "aws_subnet" "private" {
   count             = length(var.private_subnet_cidrs)
@@ -54,27 +58,10 @@ resource "aws_subnet" "private" {
   }
 }
 
-# ============================================
-# NAT Gateway (ATTENTION: ~$32/mois)
-# Pour compte Student: commenter et utiliser subnets publics
-# ============================================
-# Option 1: NAT Gateway (payant)
-# resource "aws_eip" "nat" {
-#   domain = "vpc"
-#   tags = { Name = "${var.project_name}-nat-eip" }
-# }
-# resource "aws_nat_gateway" "main" {
-#   allocation_id = aws_eip.nat.id
-#   subnet_id     = aws_subnet.public[0].id
-#   tags = { Name = "${var.project_name}-nat" }
-#   depends_on = [aws_internet_gateway.main]
-# }
-
-# Option 2: Pas de NAT - ECS dans subnets publics (gratuit, utilisé ici)
-# Les services ECS auront assign_public_ip = true
 
 # ============================================
 # Route Tables
+# - gèrent le routage du trafic réseau
 # ============================================
 
 # Route table publique

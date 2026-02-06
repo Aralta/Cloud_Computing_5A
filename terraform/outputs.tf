@@ -4,6 +4,7 @@
 
 # ============================================
 # VPC
+# - ID du VPC et des subnets
 # ============================================
 output "vpc_id" {
   description = "ID du VPC"
@@ -22,6 +23,7 @@ output "private_subnet_ids" {
 
 # ============================================
 # ALB
+# - informations sur l'Application Load Balancer
 # ============================================
 output "alb_dns_name" {
   description = "DNS name de l'ALB (URL de l'application)"
@@ -40,6 +42,7 @@ output "app_url" {
 
 # ============================================
 # ECR
+# - URLs des repositories ECR
 # ============================================
 output "ecr_web_url" {
   description = "URL du repository ECR Web"
@@ -58,6 +61,7 @@ output "ecr_api_user_url" {
 
 # ============================================
 # RDS
+# - Endpoints des bases de données
 # ============================================
 output "rds_events_endpoint" {
   description = "Endpoint RDS Events DB"
@@ -73,6 +77,7 @@ output "rds_users_endpoint" {
 
 # ============================================
 # ECS
+# - informations sur le cluster ECS
 # ============================================
 output "ecs_cluster_name" {
   description = "Nom du cluster ECS"
@@ -85,15 +90,8 @@ output "ecs_cluster_arn" {
 }
 
 # ============================================
-# Service Discovery
-# ============================================
-output "service_discovery_namespace" {
-  description = "Namespace DNS pour le service discovery"
-  value       = aws_service_discovery_private_dns_namespace.main.name
-}
-
-# ============================================
 # Commandes utiles
+# - pour Docker et ECR
 # ============================================
 output "docker_login_command" {
   description = "Commande pour se connecter à ECR"

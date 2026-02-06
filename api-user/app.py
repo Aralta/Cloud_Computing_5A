@@ -10,6 +10,7 @@ from src.config import settings
 from src.database import engine
 from src import models
 from src.routers import auth, users
+from src.routers import admin
 
 # Création des tables en base de données
 models.Base.metadata.create_all(bind=engine)
@@ -35,6 +36,7 @@ app.add_middleware(
 # Inclusion des routers
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(admin.router)
 
 
 # ============================================
@@ -63,10 +65,16 @@ def health():
 
 
 if __name__ == "__main__":
+    print(f"\n{'='*50}")
+    print(f"🚀 API User démarrée sur http://0.0.0.0:3000")
+    print(f"📚 Documentation: http://0.0.0.0:3000/docs")
+    print(f"{'='*50}\n")
+    
     uvicorn.run(
         "app:app",
         host="0.0.0.0",
-        port=5001,
-        reload=settings.DEBUG
+        port=3000,
+        reload=settings.DEBUG,
+        log_level="info" if not settings.DEBUG else "debug"
     )
 

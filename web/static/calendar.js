@@ -62,10 +62,10 @@ function apiEventToFcEvent(apiEv) {
     end: apiEv.end,
     extendedProps: {
       backendEventId: eventId,
-      ownerId: apiEv.ownerId,
+      ownerId: apiEv.owner_id,            // API retourne "owner_id"
       description: apiEv.description || "",
-      viewUserIds: apiEv.viewUserIds || [],
-      editUserIds: apiEv.editUserIds || [],
+      viewUserIds: apiEv.viewers || [],   // API retourne "viewers"
+      editUserIds: apiEv.editors || [],   // API retourne "editors"
     },
   };
 
@@ -97,7 +97,7 @@ function normalizeCreatedEvent(apiCreated, fallbackPayload) {
     },
   };
 
-  applyRandomColors(fc, eventId);
+  return applyRandomColors(fc, eventId);
 }
 
 /**********************USERS IN MODAL*************************/
@@ -327,14 +327,14 @@ export async function handleModalSubmit() {
       editors: filteredEditUserIds,   // API attend "editors"
     };
 
-    await apiFetch(`/events/${backendId}`, { method: "PUT", body: payload, useMetierApi: true });
+    const updated = await apiFetch(`/events/${backendId}`, { method: "PUT", body: payload, useMetierApi: true });
 
-    // Applique localement après succès
-    ev.setProp("title", title);
-    ev.setExtendedProp("description", description);
-    ev.setExtendedProp("viewUserIds", viewUserIds);
-    ev.setExtendedProp("editUserIds", filteredEditUserIds);
-    ev.setDates(startDate, endDate);
+    // Applique les valeurs retournées par l'API (qui peuvent différer, ex: éditeur auto-ajouté)
+    ev.setProp("title", updated.title);
+    ev.setExtendedProp("description", updated.description || "");
+    ev.setExtendedProp("viewUserIds", updated.viewers || []);
+    ev.setExtendedProp("editUserIds", updated.editors || []);
+    ev.setDates(new Date(updated.start), new Date(updated.end));
 
     closeEventModal();
   } catch (e) {

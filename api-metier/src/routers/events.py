@@ -146,7 +146,12 @@ def update_event(
     if event_data.viewers is not None:
         event.viewers = event_data.viewers
     if event_data.editors is not None:
-        event.editors = event_data.editors
+        new_editors = list(event_data.editors)
+        # Si l'utilisateur n'est pas le propriétaire mais est éditeur,
+        # on s'assure qu'il conserve ses droits d'édition
+        if current_user.user_id != event.owner_id and current_user.user_id not in new_editors:
+            new_editors.append(current_user.user_id)
+        event.editors = new_editors
     
     # Validation des dates
     if event.end_date < event.start_date:

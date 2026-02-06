@@ -17,6 +17,7 @@ from src.config import settings
 from src.database import engine
 from src import models
 from src.routers import events
+from src.routers import admin
 
 # Création des tables en base de données
 models.Base.metadata.create_all(bind=engine)
@@ -41,6 +42,7 @@ app.add_middleware(
 
 # Inclusion des routers
 app.include_router(events.router)
+app.include_router(admin.router)
 
 
 # ============================================

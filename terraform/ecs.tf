@@ -1,5 +1,6 @@
 # ============================================
 # ECS - Elastic Container Service
+# Compatible AWS Academy / Student Account
 # ============================================
 
 # Cluster ECS
@@ -30,44 +31,11 @@ resource "aws_ecs_cluster_capacity_providers" "main" {
 }
 
 # ============================================
-# IAM Role pour ECS Task Execution
+# IAM - Utilisation du LabRole existant
+# AWS Academy ne permet pas de créer des rôles IAM
 # ============================================
-resource "aws_iam_role" "ecs_task_execution" {
-  name = "${var.project_name}-ecs-task-execution"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "ecs-tasks.amazonaws.com"
-      }
-    }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
-  role       = aws_iam_role.ecs_task_execution.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
-# ============================================
-# IAM Role pour ECS Task
-# ============================================
-resource "aws_iam_role" "ecs_task" {
-  name = "${var.project_name}-ecs-task"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "ecs-tasks.amazonaws.com"
-      }
-    }]
-  })
+data "aws_iam_role" "lab_role" {
+  name = "LabRole"
 }
 
 # ============================================
@@ -99,8 +67,8 @@ resource "aws_ecs_task_definition" "web" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.ecs_task_cpu
   memory                   = var.ecs_task_memory
-  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
-  task_role_arn            = aws_iam_role.ecs_task.arn
+  execution_role_arn       = data.aws_iam_role.lab_role.arn
+  task_role_arn            = data.aws_iam_role.lab_role.arn
 
   container_definitions = jsonencode([{
     name  = "web"
@@ -113,8 +81,9 @@ resource "aws_ecs_task_definition" "web" {
 
     environment = [
       { name = "PORT", value = "8080" },
-      { name = "API_METIER_URL", value = "http://api-metier.${var.project_name}.local:3001" },
-      { name = "API_USER_URL", value = "http://api-user.${var.project_name}.local:3000" }
+      # Communication via ALB (pas de Service Discovery)
+      { name = "API_METIER_URL", value = "http://${aws_lb.main.dns_name}/api/events" },
+      { name = "API_USER_URL", value = "http://${aws_lb.main.dns_name}/api" }
     ]
 
     logConfiguration = {
@@ -143,8 +112,8 @@ resource "aws_ecs_task_definition" "api_metier" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.ecs_task_cpu
   memory                   = var.ecs_task_memory
-  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
-  task_role_arn            = aws_iam_role.ecs_task.arn
+  execution_role_arn       = data.aws_iam_role.lab_role.arn
+  task_role_arn            = data.aws_iam_role.lab_role.arn
 
   container_definitions = jsonencode([{
     name  = "api-metier"
@@ -158,7 +127,10 @@ resource "aws_ecs_task_definition" "api_metier" {
     environment = [
       { name = "PORT", value = "3001" },
       { name = "DATABASE_URL", value = "postgresql://${var.db_username}:${var.db_password}@${aws_db_instance.events.endpoint}/events_db" },
-      { name = "API_USER_URL", value = "http://api-user.${var.project_name}.local:3000" }
+      { name = "SECRET_KEY", value = var.jwt_secret },
+      { name = "PURGE_PASSWORD", value = var.purge_password },
+      # Communication via ALB
+      { name = "API_USER_URL", value = "http://${aws_lb.main.dns_name}/api" }
     ]
 
     logConfiguration = {
@@ -187,8 +159,8 @@ resource "aws_ecs_task_definition" "api_user" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.ecs_task_cpu
   memory                   = var.ecs_task_memory
-  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
-  task_role_arn            = aws_iam_role.ecs_task.arn
+  execution_role_arn       = data.aws_iam_role.lab_role.arn
+  task_role_arn            = data.aws_iam_role.lab_role.arn
 
   container_definitions = jsonencode([{
     name  = "api-user"
@@ -202,8 +174,9 @@ resource "aws_ecs_task_definition" "api_user" {
     environment = [
       { name = "PORT", value = "3000" },
       { name = "DATABASE_URL", value = "postgresql://${var.db_username}:${var.db_password}@${aws_db_instance.users.endpoint}/users_db" },
-      { name = "JWT_SECRET", value = var.jwt_secret },
-      { name = "JWT_EXPIRATION", value = tostring(var.jwt_expiration) }
+      { name = "SECRET_KEY", value = var.jwt_secret },
+      { name = "PURGE_PASSWORD", value = var.purge_password },
+      { name = "ACCESS_TOKEN_EXPIRE_MINUTES", value = tostring(var.jwt_expiration / 60) }
     ]
 
     logConfiguration = {
@@ -226,7 +199,7 @@ resource "aws_ecs_task_definition" "api_user" {
 }
 
 # ============================================
-# ECS Services
+# ECS Services (sans Service Discovery)
 # ============================================
 
 # Service Web
@@ -238,19 +211,15 @@ resource "aws_ecs_service" "web" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = aws_subnet.public[*].id  # Public pour éviter NAT Gateway
+    subnets          = aws_subnet.public[*].id
     security_groups  = [aws_security_group.ecs.id]
-    assign_public_ip = true  # Nécessaire sans NAT
+    assign_public_ip = true
   }
 
   load_balancer {
     target_group_arn = aws_lb_target_group.web.arn
     container_name   = "web"
     container_port   = 8080
-  }
-
-  service_registries {
-    registry_arn = aws_service_discovery_service.web.arn
   }
 
   depends_on = [aws_lb_listener.http]
@@ -265,19 +234,15 @@ resource "aws_ecs_service" "api_metier" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = aws_subnet.public[*].id  # Public pour éviter NAT Gateway
+    subnets          = aws_subnet.public[*].id
     security_groups  = [aws_security_group.ecs.id]
-    assign_public_ip = true  # Nécessaire sans NAT
+    assign_public_ip = true
   }
 
   load_balancer {
     target_group_arn = aws_lb_target_group.api_metier.arn
     container_name   = "api-metier"
     container_port   = 3001
-  }
-
-  service_registries {
-    registry_arn = aws_service_discovery_service.api_metier.arn
   }
 
   depends_on = [aws_lb_listener.http]
@@ -292,9 +257,9 @@ resource "aws_ecs_service" "api_user" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = aws_subnet.public[*].id  # Public pour éviter NAT Gateway
+    subnets          = aws_subnet.public[*].id
     security_groups  = [aws_security_group.ecs.id]
-    assign_public_ip = true  # Nécessaire sans NAT
+    assign_public_ip = true
   }
 
   load_balancer {
@@ -303,69 +268,5 @@ resource "aws_ecs_service" "api_user" {
     container_port   = 3000
   }
 
-  service_registries {
-    registry_arn = aws_service_discovery_service.api_user.arn
-  }
-
   depends_on = [aws_lb_listener.http]
-}
-
-# ============================================
-# Service Discovery (pour communication inter-services)
-# ============================================
-resource "aws_service_discovery_private_dns_namespace" "main" {
-  name        = "${var.project_name}.local"
-  vpc         = aws_vpc.main.id
-  description = "Service discovery pour ${var.project_name}"
-}
-
-resource "aws_service_discovery_service" "web" {
-  name = "web"
-
-  dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.main.id
-
-    dns_records {
-      ttl  = 10
-      type = "A"
-    }
-  }
-
-  health_check_custom_config {
-    failure_threshold = 1
-  }
-}
-
-resource "aws_service_discovery_service" "api_metier" {
-  name = "api-metier"
-
-  dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.main.id
-
-    dns_records {
-      ttl  = 10
-      type = "A"
-    }
-  }
-
-  health_check_custom_config {
-    failure_threshold = 1
-  }
-}
-
-resource "aws_service_discovery_service" "api_user" {
-  name = "api-user"
-
-  dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.main.id
-
-    dns_records {
-      ttl  = 10
-      type = "A"
-    }
-  }
-
-  health_check_custom_config {
-    failure_threshold = 1
-  }
 }

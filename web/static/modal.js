@@ -120,7 +120,11 @@ export function openCreateModal(selection) {
 
   eventModalTitleEl.textContent = "Créer un événement";
   modalSubmitBtnEl.textContent = "Créer";
+  modalSubmitBtnEl.classList.remove("hidden");  // S'assurer que le bouton est visible
   modalDeleteBtnEl.classList.add("hidden");
+
+  // Activer les champs pour la création
+  setFieldsReadOnly(false);
 
   eventFormEl.reset();
 

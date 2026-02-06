@@ -1,5 +1,6 @@
 # ============================================
 # Variables Terraform
+# - variables globales pour le projet Calendar
 # ============================================
 
 variable "aws_region" {
@@ -22,6 +23,7 @@ variable "project_name" {
 
 # ============================================
 # VPC Configuration
+# - variables décrivant le réseau
 # ============================================
 variable "vpc_cidr" {
   description = "CIDR block pour le VPC"
@@ -43,6 +45,7 @@ variable "private_subnet_cidrs" {
 
 # ============================================
 # RDS Configuration
+# - variables pour la base de données relationnelle
 # ============================================
 variable "db_instance_class" {
   description = "Classe d'instance RDS"
@@ -65,6 +68,7 @@ variable "db_password" {
 
 # ============================================
 # ECS Configuration
+# - variables pour le cluster ECS et les services
 # ============================================
 variable "ecs_task_cpu" {
   description = "CPU pour les tâches ECS (en unités)"
@@ -86,6 +90,7 @@ variable "app_count" {
 
 # ============================================
 # Application Configuration
+# - variables spécifiques à l'application Calendar
 # ============================================
 variable "jwt_secret" {
   description = "Secret JWT pour l'authentification"
@@ -97,4 +102,10 @@ variable "jwt_expiration" {
   description = "Durée de validité du JWT (secondes)"
   type        = number
   default     = 3600
+}
+
+variable "purge_password" {
+  description = "Mot de passe utilisé pour l'opération de purge des bases via l'admin endpoint"
+  type        = string
+  sensitive   = true
 }

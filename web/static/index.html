@@ -127,14 +127,33 @@
           </div>
 
           <div class="modal__actions">
-            <button id="modalCancelBtn" type="button" class="btn-secondary">Annuler</button>
+            <button id="modalCancelBtn" type="button" class="btn btn-secondary">Annuler</button>
 
-            <button id="modalDeleteBtn" type="button" class="btn-danger hidden">Supprimer</button>
+            <button id="modalDeleteBtn" type="button" class="btn btn-danger hidden">Supprimer</button>
 
-            <button id="modalSubmitBtn" type="submit">Enregistrer</button>
+            <button id="modalSubmitBtn" type="submit" class="btn btn-primary">Enregistrer</button>
           </div>
         </form>
       </div>
     </div>
+    
+      <!-- ADMIN PURGE (CACHÉ) -->
+      <div id="adminConsoleModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="adminConsoleTitle">
+        <div class="modal__backdrop" data-close="1"></div>
+        <div class="modal__content" role="document">
+          <h2 id="adminConsoleTitle">Console Admin - Purge DB</h2>
+          <form id="adminConsoleForm" class="form">
+            <label>
+              Mot de passe
+              <input id="adminPassword" type="password" autocomplete="off" />
+            </label>
+            <div class="modal__actions">
+              <button id="adminCancelBtn" type="button" class="btn btn-secondary">Annuler</button>
+              <button id="adminPurgeBtn" type="button" class="btn btn-danger">Purger les DB</button>
+            </div>
+            <div id="adminConsoleMsg" class="muted small hidden"></div>
+          </form>
+        </div>
+      </div>
   </body>
 </html>

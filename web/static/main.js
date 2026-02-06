@@ -1,4 +1,4 @@
-import { setAuthErrorHandler, setTokenProvider } from "./api.js";
+import { setAuthErrorHandler, setTokenProvider, apiFetch } from "./api.js";
 import { getToken, handleSessionExpired, initAuthUI, login, logout, register, setLoginError, setRegisterError, showCalendar, showLogin, showLoginForm, showRegisterForm } from "./auth.js";
 import { configureCalendar, destroyCalendar, ensureCalendarRendered, handleModalDelete, handleModalSubmit, handleRetryUsers, refetchEvents } from "./calendar.js";
 import { closeEventModal, getModalState, initModal, isModalOpen } from "./modal.js";
@@ -48,6 +48,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalCancelBtnEl = document.getElementById("modalCancelBtn");
   const modalSubmitBtnEl = document.getElementById("modalSubmitBtn");
   const modalDeleteBtnEl = document.getElementById("modalDeleteBtn");
+  
+  // Admin console refs (cachée)
+  const adminConsoleModalEl = document.getElementById("adminConsoleModal");
+  const adminPasswordEl = document.getElementById("adminPassword");
+  const adminPurgeBtnEl = document.getElementById("adminPurgeBtn");
+  const adminCancelBtnEl = document.getElementById("adminCancelBtn");
+  const adminConsoleMsgEl = document.getElementById("adminConsoleMsg");
 
   /********************INIT MODULES********************/
   //Modal
@@ -218,6 +225,79 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && isModalOpen()) closeEventModal();
   });
+
+  // Admin console: ouvrir avec Ctrl+Alt+P (cachée par défaut)
+  function showAdminConsole() {
+    if (!adminConsoleModalEl) return;
+    adminConsoleModalEl.classList.remove("hidden");
+    document.body.classList.add("modal-open");
+    if (adminPasswordEl) adminPasswordEl.focus();
+  }
+
+  function closeAdminConsole() {
+    if (!adminConsoleModalEl) return;
+    adminConsoleModalEl.classList.add("hidden");
+    document.body.classList.remove("modal-open");
+    if (adminPasswordEl) adminPasswordEl.value = "";
+    if (adminConsoleMsgEl) {
+      adminConsoleMsgEl.textContent = "";
+      adminConsoleMsgEl.classList.add("hidden");
+    }
+  }
+
+  document.addEventListener("keydown", (e) => {
+    // Accept either 'p' key or physical KeyP and be robust to caps/keyboard layouts
+    const isP = (e.key && e.key.toLowerCase() === "p") || (e.code && e.code === "KeyP");
+    if (e.ctrlKey && e.altKey && isP) {
+      // toggle
+      if (adminConsoleModalEl && adminConsoleModalEl.classList.contains("hidden")) showAdminConsole();
+      else closeAdminConsole();
+    }
+  });
+
+  if (adminCancelBtnEl) adminCancelBtnEl.addEventListener("click", () => closeAdminConsole());
+
+  if (adminPurgeBtnEl) {
+
+    adminPurgeBtnEl.addEventListener("click", async () => {
+      const pwd = adminPasswordEl?.value || "";
+      if (!pwd) {
+        if (adminConsoleMsgEl) {
+          adminConsoleMsgEl.textContent = "Entrez le mot de passe.";
+          adminConsoleMsgEl.classList.remove("hidden");
+        }
+        return;
+      }
+
+      const confirmed = confirm("Confirmer la purge des deux bases ? Cette opération est irréversible.");
+      if (!confirmed) return;
+
+      // Disable UI
+      adminPurgeBtnEl.disabled = true;
+      adminCancelBtnEl.disabled = true;
+
+      try {
+        // Purge users (api-user)
+        await apiFetch(`/admin/purge`, { method: "POST", body: { password: pwd }, useMetierApi: false });
+        // Purge events (api-metier)
+        await apiFetch(`/admin/purge`, { method: "POST", body: { password: pwd }, useMetierApi: true });
+
+        if (adminConsoleMsgEl) {
+          adminConsoleMsgEl.textContent = "Purge effectuée sur les deux bases.";
+          adminConsoleMsgEl.classList.remove("hidden");
+        }
+      } catch (err) {
+        console.error(err);
+        if (adminConsoleMsgEl) {
+          adminConsoleMsgEl.textContent = "Erreur lors de la purge. Vérifiez le mot de passe et les logs serveur.";
+          adminConsoleMsgEl.classList.remove("hidden");
+        }
+      } finally {
+        adminPurgeBtnEl.disabled = false;
+        adminCancelBtnEl.disabled = false;
+      }
+    });
+  }
 
   //dédouble
   viewersSelectEl.addEventListener("change", () => usersUI.enforceNoOverlap());

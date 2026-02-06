@@ -6,6 +6,7 @@
 resource "aws_ecr_repository" "web" {
   name                 = "${var.project_name}-web"
   image_tag_mutability = "MUTABLE"
+  force_delete = true
 
   image_scanning_configuration {
     scan_on_push = true
@@ -20,6 +21,7 @@ resource "aws_ecr_repository" "web" {
 resource "aws_ecr_repository" "api_metier" {
   name                 = "${var.project_name}-api-metier"
   image_tag_mutability = "MUTABLE"
+  force_delete = true
 
   image_scanning_configuration {
     scan_on_push = true
@@ -34,6 +36,7 @@ resource "aws_ecr_repository" "api_metier" {
 resource "aws_ecr_repository" "api_user" {
   name                 = "${var.project_name}-api-user"
   image_tag_mutability = "MUTABLE"
+  force_delete = true
 
   image_scanning_configuration {
     scan_on_push = true

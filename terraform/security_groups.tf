@@ -1,5 +1,6 @@
 # ============================================
 # Security Groups
+# - définissent les règles de sécurité pour les ressources AWS
 # ============================================
 
 # SG pour l'ALB (Load Balancer)
